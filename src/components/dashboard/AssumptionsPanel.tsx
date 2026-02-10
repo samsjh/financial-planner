@@ -20,6 +20,19 @@ import {
   EARNED_INCOME_RELIEF_BELOW_55,
   EARNED_INCOME_RELIEF_55_TO_59,
   EARNED_INCOME_RELIEF_60_AND_ABOVE,
+  CPF_RELIEF_CAP,
+  QUALIFYING_CHILD_RELIEF,
+  QUALIFYING_CHILD_RELIEF_DISABLED,
+  PARENT_RELIEF_SAME_HOUSEHOLD,
+  PARENT_RELIEF_SAME_HOUSEHOLD_HANDICAPPED,
+  PARENT_RELIEF_NOT_SAME_HOUSEHOLD,
+  PARENT_RELIEF_NOT_SAME_HOUSEHOLD_HANDICAPPED,
+  WORKING_MOTHER_CHILD_RELIEF_1_CHILD,
+  WORKING_MOTHER_CHILD_RELIEF_2_CHILDREN,
+  WORKING_MOTHER_CHILD_RELIEF_3_PLUS_CHILDREN,
+  WORKING_MOTHER_CHILD_RELIEF_CAP,
+  NSMAN_RELIEF,
+  CPF_TOPUP_RELIEF_CAP,
   DEFAULT_INFLATION_RATE,
   DEFAULT_MEDICAL_INFLATION_RATE,
   DEFAULT_EDUCATION_INFLATION_RATE,
@@ -279,32 +292,147 @@ function TaxBracketsTable() {
 
 function TaxReliefsTable() {
   const reliefs = [
-    { name: "Total Personal Reliefs Cap", value: currency(TOTAL_PERSONAL_RELIEFS_CAP), note: "Overall cap on all reliefs" },
-    { name: "SRS Relief Cap (SC/PR)", value: currency(SRS_RELIEF_CAP), note: "Annual SRS contribution cap" },
-    { name: "Life Insurance Relief", value: currency(LIFE_INSURANCE_RELIEF_CAP), note: "Reduced if CPF ≥ $5,000" },
-    { name: "Earned Income Relief (<55)", value: currency(EARNED_INCOME_RELIEF_BELOW_55), note: "" },
-    { name: "Earned Income Relief (55–59)", value: currency(EARNED_INCOME_RELIEF_55_TO_59), note: "" },
-    { name: "Earned Income Relief (≥60)", value: currency(EARNED_INCOME_RELIEF_60_AND_ABOVE), note: "" },
+    // Overall cap
+    {
+      section: "Overall Cap",
+      name: "Total Personal Reliefs Cap",
+      value: currency(TOTAL_PERSONAL_RELIEFS_CAP),
+      note: "Sum of all personal reliefs cannot exceed this",
+    },
+    // CPF & Mandatory Contributions
+    {
+      section: "Mandatory Contributions",
+      name: "CPF Relief (Employee Contribution)",
+      value: `Up to ${currency(CPF_RELIEF_CAP)}`,
+      note: "20% of ordinary wages (capped at $8k/mo)",
+    },
+    {
+      section: "Mandatory Contributions",
+      name: "SRS Contribution Relief",
+      value: `Up to ${currency(SRS_RELIEF_CAP)}`,
+      note: "Singaporean/PR annual SRS cap",
+    },
+    // Earned Income Reliefs
+    {
+      section: "Earned Income Relief (Age-based)",
+      name: "Earned Income Relief (Below 55)",
+      value: currency(EARNED_INCOME_RELIEF_BELOW_55),
+      note: "",
+    },
+    {
+      section: "Earned Income Relief (Age-based)",
+      name: "Earned Income Relief (55–59)",
+      value: currency(EARNED_INCOME_RELIEF_55_TO_59),
+      note: "",
+    },
+    {
+      section: "Earned Income Relief (Age-based)",
+      name: "Earned Income Relief (60+)",
+      value: currency(EARNED_INCOME_RELIEF_60_AND_ABOVE),
+      note: "",
+    },
+    // Family-related Reliefs
+    {
+      section: "Family-related Reliefs",
+      name: "Qualifying Child Relief (QCR) — Per Child",
+      value: currency(QUALIFYING_CHILD_RELIEF),
+      note: "Standard child",
+    },
+    {
+      section: "Family-related Reliefs",
+      name: "Qualifying Child Relief — Disabled Child",
+      value: currency(QUALIFYING_CHILD_RELIEF_DISABLED),
+      note: "Higher relief for disabled child",
+    },
+    {
+      section: "Family-related Reliefs",
+      name: "Parent Relief (Same Household)",
+      value: currency(PARENT_RELIEF_SAME_HOUSEHOLD),
+      note: "Parent living with taxpayer",
+    },
+    {
+      section: "Family-related Reliefs",
+      name: "Parent Relief (Same Household, Handicapped)",
+      value: currency(PARENT_RELIEF_SAME_HOUSEHOLD_HANDICAPPED),
+      note: "",
+    },
+    {
+      section: "Family-related Reliefs",
+      name: "Parent Relief (Not Same Household)",
+      value: currency(PARENT_RELIEF_NOT_SAME_HOUSEHOLD),
+      note: "Parent not living with taxpayer",
+    },
+    {
+      section: "Family-related Reliefs",
+      name: "Parent Relief (Not Same Household, Handicapped)",
+      value: currency(PARENT_RELIEF_NOT_SAME_HOUSEHOLD_HANDICAPPED),
+      note: "",
+    },
+    {
+      section: "Family-related Reliefs",
+      name: "Working Mother's Child Relief (1 child)",
+      value: `${pct1(WORKING_MOTHER_CHILD_RELIEF_1_CHILD)} of earned income`,
+      note: `Capped at ${currency(WORKING_MOTHER_CHILD_RELIEF_CAP)}`,
+    },
+    {
+      section: "Family-related Reliefs",
+      name: "Working Mother's Child Relief (2 children)",
+      value: `${pct1(WORKING_MOTHER_CHILD_RELIEF_2_CHILDREN)} of earned income`,
+      note: `Capped at ${currency(WORKING_MOTHER_CHILD_RELIEF_CAP)}`,
+    },
+    {
+      section: "Family-related Reliefs",
+      name: "Working Mother's Child Relief (3+ children)",
+      value: `${pct1(WORKING_MOTHER_CHILD_RELIEF_3_PLUS_CHILDREN)} of earned income`,
+      note: `Capped at ${currency(WORKING_MOTHER_CHILD_RELIEF_CAP)}`,
+    },
+    // Other Reliefs
+    {
+      section: "Other Reliefs",
+      name: "Life Insurance Relief",
+      value: currency(LIFE_INSURANCE_RELIEF_CAP),
+      note: "Reduced if CPF contribution ≥ $5k",
+    },
+    {
+      section: "Other Reliefs",
+      name: "NSman Relief (Active NSmen)",
+      value: currency(NSMAN_RELIEF),
+      note: "For active National Servicemen",
+    },
+    {
+      section: "Other Reliefs",
+      name: "CPF Top-up Relief (Capital Incentive)",
+      value: `Up to ${currency(CPF_TOPUP_RELIEF_CAP)}`,
+      note: "Per recipient (self or family member)",
+    },
   ];
+
+  // Group by section
+  const grouped: Record<string, typeof reliefs> = {};
+  reliefs.forEach((r) => {
+    if (!grouped[r.section]) grouped[r.section] = [];
+    grouped[r.section].push(r);
+  });
+
   return (
-    <table className="w-full text-xs">
-      <thead>
-        <tr className="border-b border-border text-muted-foreground">
-          <th className="text-left py-2 pr-2 font-medium">Relief</th>
-          <th className="text-right py-2 px-2 font-medium">Cap / Amount</th>
-          <th className="text-left py-2 pl-2 font-medium">Note</th>
-        </tr>
-      </thead>
-      <tbody>
-        {reliefs.map((r) => (
-          <tr key={r.name} className="border-b border-border/50">
-            <td className="py-1.5 pr-2">{r.name}</td>
-            <td className="py-1.5 px-2 text-right font-mono font-semibold">{r.value}</td>
-            <td className="py-1.5 pl-2 text-muted-foreground">{r.note}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="space-y-4">
+      {Object.entries(grouped).map(([section, items]) => (
+        <div key={section}>
+          <h4 className="text-xs font-semibold mb-2 text-muted-foreground">{section}</h4>
+          <table className="w-full text-xs">
+            <tbody>
+              {items.map((r) => (
+                <tr key={r.name} className="border-b border-border/50">
+                  <td className="py-1.5 pr-2">{r.name}</td>
+                  <td className="py-1.5 px-2 text-right font-mono font-semibold">{r.value}</td>
+                  <td className="py-1.5 pl-2 text-muted-foreground max-w-[200px]">{r.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -356,13 +484,13 @@ function InsuranceBenchmarksTable() {
           <tr className="border-b border-border/50">
             <td className="py-1.5 pr-2">{LIA_BENCHMARKS.DEATH.label}</td>
             <td className="py-1.5 text-right font-mono">
-              {LIA_BENCHMARKS.DEATH.multiplierOfIncome}× annual income or {LIA_BENCHMARKS.DEATH.minYearsExpenses} years expenses
+              {LIA_BENCHMARKS.DEATH.multiplierOfIncome}× annual income
             </td>
           </tr>
           <tr className="border-b border-border/50">
             <td className="py-1.5 pr-2">{LIA_BENCHMARKS.TPD.label}</td>
             <td className="py-1.5 text-right font-mono">
-              {LIA_BENCHMARKS.TPD.multiplierOfIncome}× annual income or {LIA_BENCHMARKS.TPD.minYearsExpenses} years expenses
+              {LIA_BENCHMARKS.TPD.multiplierOfIncome}× annual income
             </td>
           </tr>
           <tr className="border-b border-border/50">
@@ -389,8 +517,8 @@ function InsuranceBenchmarksTable() {
 function StressTestTable() {
   const tests = [
     { label: "Retrenchment Duration", value: `${RETRENCHMENT_DURATION_MONTHS} months` },
-    { label: "Market Crash Loss", value: pct1(MARKET_CRASH_LOSS_PERCENT) },
-    { label: "Late CI Expense Increase", value: `+${pct1(LATE_CI_EXPENSE_INCREASE_PERCENT)}` },
+    { label: "Market Crash Loss", value: `-${pct1(MARKET_CRASH_LOSS_PERCENT)}`, color: "text-red-400" },
+    { label: "Late CI Expense Increase", value: `+${pct1(LATE_CI_EXPENSE_INCREASE_PERCENT)}`, color: "text-orange-400" },
     { label: "Mortality — Male", value: `${MORTALITY_AGE.Male} years` },
     { label: "Mortality — Female", value: `${MORTALITY_AGE.Female} years` },
     { label: "Conservative Mortality (Longevity Risk)", value: `${CONSERVATIVE_MORTALITY_AGE} years` },
@@ -407,7 +535,7 @@ function StressTestTable() {
         {tests.map((t) => (
           <tr key={t.label} className="border-b border-border/50">
             <td className="py-1.5 pr-2">{t.label}</td>
-            <td className="py-1.5 text-right font-mono font-semibold">{t.value}</td>
+            <td className={`py-1.5 text-right font-mono font-semibold ${t.color || ""}`}>{t.value}</td>
           </tr>
         ))}
       </tbody>

@@ -203,15 +203,46 @@ export const IRAS_TAX_BRACKETS: TaxBracket[] = [
   { upperBound: Infinity, rate: 0.24, label: "Above $1,000,000" },
 ];
 
-// Tax Relief Caps
-export const TOTAL_PERSONAL_RELIEFS_CAP = 80000;  // Overall cap on total personal reliefs
-export const SRS_RELIEF_CAP = 15300;               // SRS cap for Singaporeans/PRs
-export const SRS_RELIEF_CAP_FOREIGNER = 35700;     // SRS cap for foreigners
-export const LIFE_INSURANCE_RELIEF_CAP = 5000;     // Life insurance relief cap
+// ─── Tax Relief Caps & Details ───────────────────────────────────────────────
+
+// Personal Reliefs (with caps per relief)
+export const TOTAL_PERSONAL_RELIEFS_CAP = 80000;  // Overall cap on all reliefs combined
+export const CPF_RELIEF_CAP = 37740;               // Max CPF relief (employee portion)
+
+// Earned Income Relief (age-based)
 export const EARNED_INCOME_RELIEF_BELOW_55 = 1000;
 export const EARNED_INCOME_RELIEF_55_TO_59 = 6000;
 export const EARNED_INCOME_RELIEF_60_AND_ABOVE = 8000;
-export const CPF_RELIEF_CAP = 37740;               // Max CPF relief (employee portion: 20% × $8k × 12 × 1.5625)
+
+// SRS Contribution Relief
+export const SRS_RELIEF_CAP = 15300;               // SRS cap for Singaporeans/PRs
+export const SRS_RELIEF_CAP_FOREIGNER = 35700;     // SRS cap for foreigners (PR/foreigner employees)
+
+// Life Insurance Relief
+export const LIFE_INSURANCE_RELIEF_CAP = 5000;     // Cap on life insurance premium relief
+
+// Qualifying Child Relief (QCR) — for tax planning
+export const QUALIFYING_CHILD_RELIEF = 4000;       // Per child
+export const QUALIFYING_CHILD_RELIEF_DISABLED = 7500; // Per disabled child
+
+// Parent/Handicapped Dependent Relief
+export const PARENT_RELIEF_SAME_HOUSEHOLD = 9000;   // Parent living with taxpayer
+export const PARENT_RELIEF_SAME_HOUSEHOLD_HANDICAPPED = 14000;
+export const PARENT_RELIEF_NOT_SAME_HOUSEHOLD = 5500;   // Parent not living with taxpayer
+export const PARENT_RELIEF_NOT_SAME_HOUSEHOLD_HANDICAPPED = 10000;
+
+// Working Mother's Child Relief — percentage based on income & child count
+// 15% (1 child), 20% (2 children), 25% (3+ children) of earned income, capped at $22,500
+export const WORKING_MOTHER_CHILD_RELIEF_1_CHILD = 0.15;
+export const WORKING_MOTHER_CHILD_RELIEF_2_CHILDREN = 0.20;
+export const WORKING_MOTHER_CHILD_RELIEF_3_PLUS_CHILDREN = 0.25;
+export const WORKING_MOTHER_CHILD_RELIEF_CAP = 22500;
+
+// NSman Relief
+export const NSMAN_RELIEF = 3000;                   // For active NSmen
+
+// CPF Top-up Relief
+export const CPF_TOPUP_RELIEF_CAP = 8000;          // Capital incentive program (CIP) — per recipient (self or family member)
 
 // ─── Default Growth Rates ────────────────────────────────────────────────────
 export const DEFAULT_PROPERTY_APPRECIATION = 0.03;  // 3% p.a.
@@ -238,13 +269,11 @@ export const FAMILY_LIABILITY_YEARS = 20;              // years of income for de
 export const LIA_BENCHMARKS = {
   DEATH: {
     label: "Death / Terminal Illness",
-    multiplierOfIncome: 10,    // 10× annual income or 5 years expenses, whichever higher
-    minYearsExpenses: 5,
+    multiplierOfIncome: 10,    // 10× annual income
   },
   TPD: {
     label: "Total Permanent Disability",
-    multiplierOfIncome: 10,    // 10× annual income or 5 years expenses, whichever higher
-    minYearsExpenses: 5,
+    multiplierOfIncome: 10,    // 10× annual income
   },
   CRITICAL_ILLNESS_EARLY: {
     label: "Critical Illness (Early Stage / ECI)",
