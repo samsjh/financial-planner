@@ -21,6 +21,7 @@ import {
   DEFAULT_PASSIVE_INCOME_YIELD,
   MARKET_CRASH_LOSS_PERCENT,
   LATE_CI_EXPENSE_INCREASE_PERCENT,
+  CPF_LIFE_PAYOUT_START_AGE,
 } from "./constants";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -186,7 +187,7 @@ export function runProjection(
 
     // CPF Life payout (post-65)
     const cpfLifeMonthlyPayout =
-      age >= 65
+      age >= CPF_LIFE_PAYOUT_START_AGE
         ? estimateCpfLifeMonthlyPayout(cpfSa, cpfOa, age)
         : 0;
     const cpfLifeAnnual = cpfLifeMonthlyPayout * 12;

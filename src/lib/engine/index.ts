@@ -3,8 +3,9 @@ export {
   calculateAnnualCpfContributions,
   projectCpfOneYear,
   estimateCpfLifeMonthlyPayout,
+  estimateRaBalance,
   calculatePropertySaleProceeds,
   getCpfRateBracket,
 } from "./cpfLogic";
-export { calculateAnnualTax } from "./taxLogic";
+export { calculateAnnualTax, getMarginalTaxRate } from "./taxLogic";
 export * from "./constants";

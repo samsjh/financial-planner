@@ -6,6 +6,7 @@ import {
   EARNED_INCOME_RELIEF_BELOW_55,
   EARNED_INCOME_RELIEF_55_TO_59,
   EARNED_INCOME_RELIEF_60_AND_ABOVE,
+  TOTAL_PERSONAL_RELIEFS_CAP,
 } from "./constants";
 import { calculateCpfRelief } from "./cpfLogic";
 
@@ -19,6 +20,7 @@ export interface TaxBreakdown {
   chargeableIncome: number;
   taxPayable: number;
   effectiveRate: number;
+  marginalRate: number;
 }
 
 /**
@@ -53,6 +55,20 @@ function calculateProgressiveTax(chargeableIncome: number): number {
   }
 
   return Math.max(0, tax);
+}
+
+/**
+ * Get the marginal tax rate for a given chargeable income.
+ * This is the rate that applies to the next dollar of income.
+ */
+export function getMarginalTaxRate(chargeableIncome: number): number {
+  if (chargeableIncome <= 0) return 0;
+  for (const bracket of IRAS_TAX_BRACKETS) {
+    if (chargeableIncome <= bracket.upperBound) {
+      return bracket.rate;
+    }
+  }
+  return IRAS_TAX_BRACKETS[IRAS_TAX_BRACKETS.length - 1].rate;
 }
 
 /**
@@ -100,11 +116,14 @@ export function calculateAnnualTax(
   // Earned Income Relief
   const earnedIncomeRelief = getEarnedIncomeRelief(age, isWorking);
 
-  const totalReliefs = cpfRelief + srsRelief + lifeInsuranceRelief + earnedIncomeRelief;
+  // Total reliefs — capped at $80,000 overall (IRAS rule)
+  const rawTotalReliefs = cpfRelief + srsRelief + lifeInsuranceRelief + earnedIncomeRelief;
+  const totalReliefs = Math.min(rawTotalReliefs, TOTAL_PERSONAL_RELIEFS_CAP);
 
   const chargeableIncome = Math.max(0, grossAnnualIncome - totalReliefs);
 
   const taxPayable = calculateProgressiveTax(chargeableIncome);
+  const marginalRate = getMarginalTaxRate(chargeableIncome);
 
   const effectiveRate =
     grossAnnualIncome > 0 ? taxPayable / grossAnnualIncome : 0;
@@ -119,5 +138,6 @@ export function calculateAnnualTax(
     chargeableIncome,
     taxPayable,
     effectiveRate,
+    marginalRate,
   };
 }
