@@ -368,3 +368,52 @@ export function projectCpfRetirementSum(
   const yearsFromNewest = targetYear - newest.year;
   return newest.amount + annualIncrease * yearsFromNewest;
 }
+
+// ─── Life Events / Milestones ────────────────────────────────────────────────
+export const EVENT_TYPES = {
+  wedding: {
+    label: "Wedding",
+    suggestedCost: 30000,
+    description: "Marriage ceremony, reception, travel",
+  },
+  birth: {
+    label: "Birth & Early Years",
+    suggestedCost: 15000,
+    description: "Delivery, confinement, initial childcare",
+  },
+  education: {
+    label: "Education",
+    suggestedCost: 15000,
+    description: "School fees, tuition, materials (annual)",
+  },
+  home_purchase: {
+    label: "Home Purchase",
+    suggestedCost: 100000,
+    description: "Down payment on HDB/condo",
+  },
+  job_loss: {
+    label: "Job Loss / Career Break",
+    suggestedCost: 50000,
+    description: "Income loss buffer (6-12 months living expenses)",
+  },
+  relocation: {
+    label: "Relocation / Moving",
+    suggestedCost: 15000,
+    description: "House moving, renovation, new location setup",
+  },
+  inheritance: {
+    label: "Inheritance / Windfall",
+    suggestedCost: 50000,
+    description: "Anticipated inheritance or bonus income",
+  },
+  medical: {
+    label: "Medical / Healthcare",
+    suggestedCost: 20000,
+    description: "Surgery, long-term medical treatment (annual)",
+  },
+  custom: {
+    label: "Custom Event",
+    suggestedCost: 10000,
+    description: "Other planned event",
+  },
+} as const;

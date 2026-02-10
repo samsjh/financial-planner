@@ -4,6 +4,7 @@ import { useDashboardStore } from "@/lib/store";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, type ProfileFormValues } from "@/lib/schema";
+import { EVENT_TYPES } from "@/lib/engine/constants";
 import {
   Accordion,
   AccordionContent,
@@ -108,6 +109,8 @@ export default function InputSidebar() {
     year: new Date().getFullYear() + 5,
     description: "",
     cost: 0,
+    eventType: "custom",
+    isRecurring: false,
   });
 
   const onSubmit = useCallback(
@@ -505,17 +508,22 @@ export default function InputSidebar() {
                     key={ev.id}
                     className="flex items-center gap-2 text-xs bg-background p-2 rounded-md border border-border"
                   >
-                    <span className="font-mono text-muted-foreground">
-                      {ev.year}
+                    <span className="font-mono text-muted-foreground flex-shrink-0">
+                      {ev.triggerAge !== undefined ? `Age ${ev.triggerAge}` : ev.year}
                     </span>
                     <span className="flex-1 truncate">{ev.description}</span>
-                    <Badge variant="outline" className="text-[10px]">
+                    {ev.isRecurring && (
+                      <Badge variant="secondary" className="text-[10px] flex-shrink-0">
+                        Annual
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-[10px] flex-shrink-0">
                       ${ev.cost.toLocaleString()}
                     </Badge>
                     <button
                       type="button"
                       onClick={() => removeLifeEvent(ev.id)}
-                      className="text-destructive hover:text-destructive/80"
+                      className="text-destructive hover:text-destructive/80 flex-shrink-0"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -523,39 +531,33 @@ export default function InputSidebar() {
                 ))}
                 <Separator />
                 <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        Year
-                      </Label>
-                      <Input
-                        type="number"
-                        className="h-8 text-xs bg-background"
-                        value={newEvent.year}
-                        onChange={(e) =>
-                          setNewEvent((p) => ({
-                            ...p,
-                            year: parseInt(e.target.value),
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        Cost ($)
-                      </Label>
-                      <Input
-                        type="number"
-                        className="h-8 text-xs bg-background"
-                        value={newEvent.cost}
-                        onChange={(e) =>
-                          setNewEvent((p) => ({
-                            ...p,
-                            cost: parseFloat(e.target.value),
-                          }))
-                        }
-                      />
-                    </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">
+                      Event Type
+                    </Label>
+                    <Select
+                      value={newEvent.eventType || "custom"}
+                      onValueChange={(val) => {
+                        const eventType = val as keyof typeof EVENT_TYPES;
+                        setNewEvent((p) => ({
+                          ...p,
+                          eventType: eventType,
+                          cost: EVENT_TYPES[eventType].suggestedCost,
+                          description: EVENT_TYPES[eventType].label,
+                        }));
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(EVENT_TYPES).map(([key, val]) => (
+                          <SelectItem key={key} value={key} className="text-xs">
+                            {val.label} (~${val.suggestedCost.toLocaleString()})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">
@@ -574,23 +576,116 @@ export default function InputSidebar() {
                       }
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        Cost ($)
+                      </Label>
+                      <Input
+                        type="number"
+                        className="h-8 text-xs bg-background"
+                        value={newEvent.cost}
+                        onChange={(e) =>
+                          setNewEvent((p) => ({
+                            ...p,
+                            cost: parseFloat(e.target.value),
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        Year
+                      </Label>
+                      <Input
+                        type="number"
+                        className="h-8 text-xs bg-background"
+                        value={newEvent.year}
+                        onChange={(e) =>
+                          setNewEvent((p) => ({
+                            ...p,
+                            year: parseInt(e.target.value),
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        Trigger Age
+                      </Label>
+                      <Input
+                        type="number"
+                        className="h-8 text-xs bg-background"
+                        placeholder="Optional"
+                        value={newEvent.triggerAge || ""}
+                        onChange={(e) =>
+                          setNewEvent((p) => ({
+                            ...p,
+                            triggerAge: e.target.value ? parseInt(e.target.value) : undefined,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        End Year
+                      </Label>
+                      <Input
+                        type="number"
+                        className="h-8 text-xs bg-background"
+                        placeholder="Optional"
+                        value={newEvent.endYear || ""}
+                        onChange={(e) =>
+                          setNewEvent((p) => ({
+                            ...p,
+                            endYear: e.target.value ? parseInt(e.target.value) : undefined,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <Label htmlFor="recurring-toggle" className="text-xs text-muted-foreground">
+                        Recurring (Annual)
+                      </Label>
+                    </div>
+                    <Switch
+                      id="recurring-toggle"
+                      checked={newEvent.isRecurring || false}
+                      onCheckedChange={(val) =>
+                        setNewEvent((p) => ({
+                          ...p,
+                          isRecurring: val,
+                        }))
+                      }
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     className="w-full text-xs"
                     onClick={() => {
-                      if (newEvent.description && newEvent.year && newEvent.cost) {
+                      if (newEvent.description && newEvent.year && newEvent.cost && newEvent.eventType) {
                         addLifeEvent({
                           id: crypto.randomUUID(),
                           year: newEvent.year!,
                           description: newEvent.description!,
                           cost: newEvent.cost!,
+                          eventType: newEvent.eventType!,
+                          triggerAge: newEvent.triggerAge,
+                          isRecurring: newEvent.isRecurring,
+                          endYear: newEvent.endYear,
                         });
                         setNewEvent({
                           year: new Date().getFullYear() + 5,
                           description: "",
                           cost: 0,
+                          eventType: "custom",
+                          isRecurring: false,
                         });
                       }
                     }}
@@ -600,7 +695,6 @@ export default function InputSidebar() {
                 </div>
               </AccordionContent>
             </AccordionItem>
-
             {/* ─── Advanced Settings ──────────────────────────────── */}
             <AccordionItem value="advanced" className="border border-border rounded-lg px-3">
               <AccordionTrigger className="text-sm py-3">

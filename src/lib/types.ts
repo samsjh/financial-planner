@@ -116,11 +116,21 @@ export interface Liability {
 
 // ─── Life Events / Milestones ────────────────────────────────────────────────
 
+export type LifeEventType = "wedding" | "birth" | "education" | "home_purchase" | "job_loss" | "relocation" | "inheritance" | "medical" | "custom";
+
 export interface LifeEvent {
   id: string;
-  year: number;
+  eventType: LifeEventType;
   description: string;
   cost: number; // positive = outflow, negative = inflow
+  
+  // Timing (pick one):
+  year: number;           // Specific year
+  triggerAge?: number;    // Age-based trigger (calculates year from profile DOB)
+  
+  // Duration:
+  isRecurring?: boolean;  // Annual repeating event
+  endYear?: number;       // Multi-year span (education, medical, etc.)
 }
 
 // ─── Simulation Results ──────────────────────────────────────────────────────

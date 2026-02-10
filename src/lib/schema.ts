@@ -75,3 +75,26 @@ export const profileSchema = z.object({
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;
+
+export const lifeEventSchema = z.object({
+  id: z.string(),
+  eventType: z.enum([
+    "wedding",
+    "birth",
+    "education",
+    "home_purchase",
+    "job_loss",
+    "relocation",
+    "inheritance",
+    "medical",
+    "custom",
+  ]),
+  description: z.string().min(1, "Description is required"),
+  cost: z.coerce.number(),
+  year: z.coerce.number().min(2026).max(2150),
+  triggerAge: z.coerce.number().min(18).max(120).optional(),
+  isRecurring: z.boolean().optional(),
+  endYear: z.coerce.number().min(2026).max(2150).optional(),
+});
+
+export type LifeEventFormValues = z.infer<typeof lifeEventSchema>;

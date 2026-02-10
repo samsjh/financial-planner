@@ -55,6 +55,33 @@ function isLiquidAsset(category: string): boolean {
   return category === "cash";
 }
 
+/**
+ * Check if a life event should trigger in the given year/age.
+ * Supports year-based, age-based, and recurring events.
+ */
+function shouldEventTrigger(event: LifeEvent, year: number, age: number): boolean {
+  // Age-based trigger: triggerAge takes precedence
+  if (event.triggerAge !== undefined) {
+    return age === event.triggerAge;
+  }
+
+  // Year-based trigger
+  if (event.year === year) {
+    return true;
+  }
+
+  // Recurring events: trigger every year from year to endYear
+  if (event.isRecurring && event.year <= year) {
+    if (event.endYear !== undefined) {
+      return year <= event.endYear;
+    }
+    // If recurring but no endYear, repeat indefinitely
+    return true;
+  }
+
+  return false;
+}
+
 // ─── Main Simulation ─────────────────────────────────────────────────────────
 
 export function runProjection(
@@ -240,7 +267,7 @@ export function runProjection(
 
     // ── Life Events ────────────────────────────────────────────────────────
 
-    const eventsThisYear = lifeEvents.filter((e) => e.year === year);
+    const eventsThisYear = lifeEvents.filter((e) => shouldEventTrigger(e, year, age));
     const lifeEventCost = eventsThisYear.reduce((sum, e) => sum + e.cost, 0);
     liquidAssets -= lifeEventCost; // Deduct from liquid assets
 
