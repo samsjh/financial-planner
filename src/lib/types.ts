@@ -93,10 +93,13 @@ export interface ClientProfile {
 
 // ─── Assets & Liabilities ────────────────────────────────────────────────────
 
+export type AssetCategory = "stocks" | "bonds" | "realestate" | "cash" | "crypto" | "commodities" | "other";
+export type LiabilityCategory = "mortgage" | "creditcard" | "personalloan" | "studentloan" | "carloan" | "other";
+
 export interface Asset {
   id: string;
   name: string;
-  category: "fixed" | "liquid";
+  category: AssetCategory;
   currentValue: number;
   projectedAppreciationRate: number; // annual, e.g. 0.07
 }
@@ -104,7 +107,7 @@ export interface Asset {
 export interface Liability {
   id: string;
   name: string;
-  category: "longTerm" | "shortTerm";
+  category: LiabilityCategory;
   currentBalance: number;
   interestRate: number; // annual
   monthlyPayment: number;

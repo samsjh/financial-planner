@@ -244,6 +244,27 @@ export const NSMAN_RELIEF = 3000;                   // For active NSmen
 // CPF Top-up Relief
 export const CPF_TOPUP_RELIEF_CAP = 8000;          // Capital incentive program (CIP) — per recipient (self or family member)
 
+// ─── Asset Categories & Default Growth Rates (Singapore 2026) ────────────────
+export const ASSET_CATEGORIES = {
+  stocks: { label: "Stocks / Equities", defaultRate: 0.07 },
+  bonds: { label: "Bonds / Fixed Income", defaultRate: 0.04 },
+  realestate: { label: "Real Estate (Non-Property)", defaultRate: 0.03 },
+  cash: { label: "Cash / Savings / Emergency Fund", defaultRate: 0.0025 },
+  crypto: { label: "Cryptocurrency", defaultRate: 0.0 },
+  commodities: { label: "Gold / Commodities", defaultRate: 0.025 },
+  other: { label: "Other / Custom", defaultRate: 0.0 },
+} as const;
+
+// ─── Liability Categories & Default Interest Rates (Singapore 2026) ──────────
+export const LIABILITY_CATEGORIES = {
+  mortgage: { label: "Mortgage (HDB / Private)", defaultRate: 0.026 },
+  creditcard: { label: "Credit Card", defaultRate: 0.24 },
+  personalloan: { label: "Personal Loan", defaultRate: 0.055 },
+  studentloan: { label: "Student Loan", defaultRate: 0.035 },
+  carloan: { label: "Car Loan", defaultRate: 0.03 },
+  other: { label: "Other Debt", defaultRate: 0.05 },
+} as const;
+
 // ─── Default Growth Rates ────────────────────────────────────────────────────
 export const DEFAULT_PROPERTY_APPRECIATION = 0.03;  // 3% p.a.
 export const DEFAULT_EQUITY_RETURN = 0.07;           // 7% p.a. (long-term equity market)
