@@ -98,27 +98,48 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       profile: { ...state.profile, ...partial },
     })),
 
-  setAssets: (assets) => set({ assets }),
-  addAsset: (asset) =>
-    set((state) => ({ assets: [...state.assets, asset] })),
-  removeAsset: (id) =>
-    set((state) => ({ assets: state.assets.filter((a) => a.id !== id) })),
+  setAssets: (assets) => {
+    set({ assets });
+    get().runSimulation();
+  },
+  addAsset: (asset) => {
+    set((state) => ({ assets: [...state.assets, asset] }));
+    get().runSimulation();
+  },
+  removeAsset: (id) => {
+    set((state) => ({ assets: state.assets.filter((a) => a.id !== id) }));
+    get().runSimulation();
+  },
 
-  setLiabilities: (liabilities) => set({ liabilities }),
-  addLiability: (liability) =>
-    set((state) => ({ liabilities: [...state.liabilities, liability] })),
-  removeLiability: (id) =>
+  setLiabilities: (liabilities) => {
+    set({ liabilities });
+    get().runSimulation();
+  },
+  addLiability: (liability) => {
+    set((state) => ({ liabilities: [...state.liabilities, liability] }));
+    get().runSimulation();
+  },
+  removeLiability: (id) => {
     set((state) => ({
       liabilities: state.liabilities.filter((l) => l.id !== id),
-    })),
+    }));
+    get().runSimulation();
+  },
 
-  setLifeEvents: (events) => set({ lifeEvents: events }),
-  addLifeEvent: (event) =>
-    set((state) => ({ lifeEvents: [...state.lifeEvents, event] })),
-  removeLifeEvent: (id) =>
+  setLifeEvents: (events) => {
+    set({ lifeEvents: events });
+    get().runSimulation();
+  },
+  addLifeEvent: (event) => {
+    set((state) => ({ lifeEvents: [...state.lifeEvents, event] }));
+    get().runSimulation();
+  },
+  removeLifeEvent: (id) => {
     set((state) => ({
       lifeEvents: state.lifeEvents.filter((e) => e.id !== id),
-    })),
+    }));
+    get().runSimulation();
+  },
 
   runSimulation: () => {
     const { profile, assets, liabilities, lifeEvents } = get();
