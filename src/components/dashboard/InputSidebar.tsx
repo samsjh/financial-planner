@@ -350,6 +350,8 @@ export default function InputSidebar() {
                 </span>
               </AccordionTrigger>
               <AccordionContent className="space-y-3 pb-4">
+                {/* ── SRS & Life Insurance ──────────────────────────── */}
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">SRS & Insurance</p>
                 <InputField
                   label="Annual SRS Contribution"
                   id="annualSrsContribution"
@@ -357,22 +359,86 @@ export default function InputSidebar() {
                   register={register("annualSrsContribution")}
                 />
                 <InputField
-                  label="SRS Relief Years Remaining"
-                  id="srsReliefYearsRemaining"
-                  register={register("srsReliefYearsRemaining")}
-                  suffix="yrs"
-                />
-                <InputField
                   label="Life Insurance Premium /yr"
                   id="lifeInsuranceRelief"
                   prefix="$"
                   register={register("lifeInsuranceRelief")}
                 />
+
+                <Separator className="my-2" />
+
+                {/* ── Children (QCR) ───────────────────────────────── */}
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Qualifying Child Relief</p>
                 <InputField
-                  label="Life Ins Relief Years Remaining"
-                  id="lifeInsuranceReliefYearsRemaining"
-                  register={register("lifeInsuranceReliefYearsRemaining")}
-                  suffix="yrs"
+                  label="No. of Qualifying Children"
+                  id="numberOfChildren"
+                  register={register("numberOfChildren")}
+                />
+                <InputField
+                  label="No. of Disabled Children"
+                  id="numberOfDisabledChildren"
+                  register={register("numberOfDisabledChildren")}
+                />
+
+                <Separator className="my-2" />
+
+                {/* ── Parent Relief ─────────────────────────────────── */}
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Parent / Handicapped Parent Relief</p>
+                <InputField
+                  label="Parents (Same Household)"
+                  id="numberOfParentsSameHousehold"
+                  register={register("numberOfParentsSameHousehold")}
+                />
+                <InputField
+                  label="Parents (Not Same Household)"
+                  id="numberOfParentsNotSameHousehold"
+                  register={register("numberOfParentsNotSameHousehold")}
+                />
+                <InputField
+                  label="Handicapped Parents (Same)"
+                  id="numberOfHandicappedParentsSameHousehold"
+                  register={register("numberOfHandicappedParentsSameHousehold")}
+                />
+                <InputField
+                  label="Handicapped Parents (Not Same)"
+                  id="numberOfHandicappedParentsNotSameHousehold"
+                  register={register("numberOfHandicappedParentsNotSameHousehold")}
+                />
+
+                <Separator className="my-2" />
+
+                {/* ── Working Mother & NSman ─────────────────────────── */}
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Other Reliefs</p>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="isWorkingMother" className="text-xs text-muted-foreground">
+                    Working Mother (WMCR)
+                  </Label>
+                  <Switch
+                    id="isWorkingMother"
+                    checked={watch("isWorkingMother")}
+                    onCheckedChange={(val) => setValue("isWorkingMother", val)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="isActiveNsman" className="text-xs text-muted-foreground">
+                    Active NSman
+                  </Label>
+                  <Switch
+                    id="isActiveNsman"
+                    checked={watch("isActiveNsman")}
+                    onCheckedChange={(val) => setValue("isActiveNsman", val)}
+                  />
+                </div>
+
+                <Separator className="my-2" />
+
+                {/* ── CPF Top-up ─────────────────────────────────────── */}
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">CPF Top-up Relief</p>
+                <InputField
+                  label="Annual CPF Voluntary Top-up"
+                  id="annualCpfTopUp"
+                  prefix="$"
+                  register={register("annualCpfTopUp")}
                 />
               </AccordionContent>
             </AccordionItem>

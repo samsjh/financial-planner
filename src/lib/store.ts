@@ -31,8 +31,21 @@ const defaultProfile: ClientProfile = {
 
   annualSrsContribution: 0,
   lifeInsuranceRelief: 0,
-  srsReliefYearsRemaining: 0,
-  lifeInsuranceReliefYearsRemaining: 0,
+
+  // Tax Reliefs — Family
+  numberOfChildren: 0,
+  numberOfDisabledChildren: 0,
+  numberOfParentsSameHousehold: 0,
+  numberOfParentsNotSameHousehold: 0,
+  numberOfHandicappedParentsSameHousehold: 0,
+  numberOfHandicappedParentsNotSameHousehold: 0,
+
+  // Tax Reliefs — Working Mother & NSman
+  isWorkingMother: false,
+  isActiveNsman: false,
+
+  // Tax Reliefs — CPF Top-up
+  annualCpfTopUp: 0,
 
   monthlyFixedExpenses: 2000,
   monthlyVariableExpenses: 1500,

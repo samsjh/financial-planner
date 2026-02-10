@@ -26,8 +26,21 @@ export const profileSchema = z.object({
 
   annualSrsContribution: z.coerce.number().min(0),
   lifeInsuranceRelief: z.coerce.number().min(0),
-  srsReliefYearsRemaining: z.coerce.number().min(0),
-  lifeInsuranceReliefYearsRemaining: z.coerce.number().min(0),
+
+  // Tax Reliefs — Family
+  numberOfChildren: z.coerce.number().min(0).max(20),
+  numberOfDisabledChildren: z.coerce.number().min(0).max(20),
+  numberOfParentsSameHousehold: z.coerce.number().min(0).max(10),
+  numberOfParentsNotSameHousehold: z.coerce.number().min(0).max(10),
+  numberOfHandicappedParentsSameHousehold: z.coerce.number().min(0).max(10),
+  numberOfHandicappedParentsNotSameHousehold: z.coerce.number().min(0).max(10),
+
+  // Tax Reliefs — Working Mother & NSman
+  isWorkingMother: z.boolean(),
+  isActiveNsman: z.boolean(),
+
+  // Tax Reliefs — CPF Top-up
+  annualCpfTopUp: z.coerce.number().min(0),
 
   monthlyFixedExpenses: z.coerce.number().min(0),
   monthlyVariableExpenses: z.coerce.number().min(0),

@@ -14,7 +14,7 @@ import type {
 } from "../types";
 
 import { projectCpfOneYear, estimateCpfLifeMonthlyPayout, calculatePropertySaleProceeds } from "./cpfLogic";
-import { calculateAnnualTax } from "./taxLogic";
+import { calculateAnnualTax, type TaxReliefInputs } from "./taxLogic";
 import {
   MORTALITY_AGE,
   CONSERVATIVE_MORTALITY_AGE,
@@ -251,14 +251,10 @@ export function runProjection(
 
     // ── Tax ────────────────────────────────────────────────────────────────
 
-    const yearsWithSrs =
-      profile.srsReliefYearsRemaining > 0
-        ? y < profile.srsReliefYearsRemaining
-        : false;
-    const yearsWithLifeIns =
-      profile.lifeInsuranceReliefYearsRemaining > 0
-        ? y < profile.lifeInsuranceReliefYearsRemaining
-        : false;
+    // Claim SRS relief if annual contribution > 0
+    const hasSrsContribution = profile.annualSrsContribution > 0;
+    // Claim life insurance relief if annual premium > 0
+    const hasLifeInsurancePremium = profile.lifeInsuranceRelief > 0;
 
     const taxBreakdown = calculateAnnualTax(
       grossAnnualTotalIncome,
@@ -267,8 +263,19 @@ export function runProjection(
       profile.annualSrsContribution,
       profile.lifeInsuranceRelief,
       isWorking,
-      yearsWithSrs,
-      yearsWithLifeIns
+      hasSrsContribution,
+      hasLifeInsurancePremium,
+      {
+        numberOfChildren: profile.numberOfChildren,
+        numberOfDisabledChildren: profile.numberOfDisabledChildren,
+        numberOfParentsSameHousehold: profile.numberOfParentsSameHousehold,
+        numberOfParentsNotSameHousehold: profile.numberOfParentsNotSameHousehold,
+        numberOfHandicappedParentsSameHousehold: profile.numberOfHandicappedParentsSameHousehold,
+        numberOfHandicappedParentsNotSameHousehold: profile.numberOfHandicappedParentsNotSameHousehold,
+        isWorkingMother: profile.isWorkingMother,
+        isActiveNsman: profile.isActiveNsman,
+        annualCpfTopUp: profile.annualCpfTopUp,
+      } satisfies TaxReliefInputs
     );
 
     // ── Net Cashflow ───────────────────────────────────────────────────────
