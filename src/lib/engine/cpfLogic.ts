@@ -5,9 +5,16 @@ import {
   CPF_OA_INTEREST_RATE,
   CPF_SA_INTEREST_RATE,
   CPF_MA_INTEREST_RATE,
-  CPF_LIFE_PAYOUT_PER_10K,
+  CPF_RA_INTEREST_RATE,
   CPF_LIFE_PAYOUT_START_AGE,
+  CPF_EXTRA_INTEREST_FIRST_60K,
+  CPF_EXTRA_INTEREST_NEXT_30K,
+  CPF_LIFE_PLANS,
+  CPF_RETIREMENT_SUMS,
+  CPF_RA_CREATION_AGE,
   type CpfRateBracket,
+  type CpfLifePlanType,
+  type CpfRetirementSumTier,
 } from "./constants";
 
 export interface CpfBalances {
@@ -66,15 +73,66 @@ export function calculateAnnualCpfContributions(
 }
 
 /**
- * Apply annual interest to CPF balances.
- * OA: 2.5% p.a., SA/MA: 4.0% p.a.
- * First $60k earns extra 1% (not modelled here for simplicity but could be added).
+ * Apply annual interest to CPF balances, including extra interest on first $60k
+ * and next $30k combined balances.
+ *
+ * Extra interest rules:
+ *   - First $60k of combined CPF balances: extra 1% (applied to OA first, then SA, MA)
+ *   - Next $30k (above $60k): extra 1% on SA/MA/RA only (not OA)
+ *   - For members aged ≥55: extra 2% on first $30k, extra 1% on next $30k
+ *     (simplified here as 1% on first $60k + 1% on next $30k for all ages)
  */
 export function applyCpfInterest(balances: CpfBalances): CpfBalances {
+  // Base interest
+  let oaInterest = balances.oa * CPF_OA_INTEREST_RATE;
+  let saInterest = balances.sa * CPF_SA_INTEREST_RATE;
+  let maInterest = balances.ma * CPF_MA_INTEREST_RATE;
+
+  // Extra interest calculation on first $60k combined
+  const combined = balances.oa + balances.sa + balances.ma;
+  const extraFirst60k = Math.min(combined, 60000);
+
+  if (extraFirst60k > 0) {
+    // Apply extra 1% — distributed across OA first, then SA, then MA
+    let remaining60k = extraFirst60k;
+
+    const oaExtra = Math.min(balances.oa, remaining60k);
+    oaInterest += oaExtra * CPF_EXTRA_INTEREST_FIRST_60K;
+    remaining60k -= oaExtra;
+
+    if (remaining60k > 0) {
+      const saExtra = Math.min(balances.sa, remaining60k);
+      saInterest += saExtra * CPF_EXTRA_INTEREST_FIRST_60K;
+      remaining60k -= saExtra;
+    }
+
+    if (remaining60k > 0) {
+      const maExtra = Math.min(balances.ma, remaining60k);
+      maInterest += maExtra * CPF_EXTRA_INTEREST_FIRST_60K;
+    }
+  }
+
+  // Extra interest on next $30k (only SA/MA, not OA)
+  if (combined > 60000) {
+    const extraNext30k = Math.min(combined - 60000, 30000);
+    let remainingNext30k = extraNext30k;
+
+    // Skip OA — only SA and MA get this extra interest
+    const saAbove = Math.max(0, balances.sa - Math.max(0, 60000 - balances.oa));
+    const saExtra30 = Math.min(saAbove, remainingNext30k);
+    saInterest += saExtra30 * CPF_EXTRA_INTEREST_NEXT_30K;
+    remainingNext30k -= saExtra30;
+
+    if (remainingNext30k > 0) {
+      const maExtra30 = Math.min(remainingNext30k, balances.ma);
+      maInterest += maExtra30 * CPF_EXTRA_INTEREST_NEXT_30K;
+    }
+  }
+
   return {
-    oa: balances.oa * (1 + CPF_OA_INTEREST_RATE),
-    sa: balances.sa * (1 + CPF_SA_INTEREST_RATE),
-    ma: balances.ma * (1 + CPF_MA_INTEREST_RATE),
+    oa: balances.oa + oaInterest,
+    sa: balances.sa + saInterest,
+    ma: balances.ma + maInterest,
   };
 }
 
@@ -127,32 +185,83 @@ export function projectCpfOneYear(
   // Apply deductions
   updated = applyCpfDeductions(updated, housingUsageMonthly, shieldPremiumAnnual);
 
-  // Apply interest
+  // Apply interest (now includes extra interest on first $60k/$30k)
   updated = applyCpfInterest(updated);
 
   return { newBalances: updated, contributions };
 }
 
 /**
- * Estimate CPF Life monthly payout based on combined SA+OA balance
- * transferred to Retirement Account at age 55, grown to 65.
- * Rule of thumb: ~$1 per $10,000 in RA per month.
+ * Estimate the Retirement Account (RA) balance at CPF LIFE payout start age.
+ * At age 55, SA and part of OA are transferred to RA (up to the selected retirement sum).
+ *
+ * @param saBalance - Current SA balance
+ * @param oaBalance - Current OA balance
+ * @param currentAge - Current age
+ * @param retirementSumTier - BRS, FRS, or ERS
+ * @returns Estimated RA balance at age 65
+ */
+export function estimateRaBalance(
+  saBalance: number,
+  oaBalance: number,
+  currentAge: number,
+  retirementSumTier: CpfRetirementSumTier = "FRS"
+): number {
+  const targetSum = CPF_RETIREMENT_SUMS[retirementSumTier];
+
+  if (currentAge >= CPF_RA_CREATION_AGE) {
+    // RA already created — assume current SA+part of OA = RA
+    // Cap at the selected retirement sum
+    const rawRA = Math.min(saBalance + oaBalance, targetSum);
+    const yearsToPayoutStart = Math.max(0, CPF_LIFE_PAYOUT_START_AGE - currentAge);
+    return rawRA * Math.pow(1 + CPF_RA_INTEREST_RATE, yearsToPayoutStart);
+  }
+
+  // Project SA growth to age 55 (when RA is created)
+  const yearsTo55 = CPF_RA_CREATION_AGE - currentAge;
+  const projectedSA = saBalance * Math.pow(1 + CPF_SA_INTEREST_RATE, yearsTo55);
+  const projectedOA = oaBalance * Math.pow(1 + CPF_OA_INTEREST_RATE, yearsTo55);
+
+  // At age 55: SA transfers to RA first, then OA tops up to reach retirement sum
+  const saToRA = Math.min(projectedSA, targetSum);
+  const oaToRA = Math.min(projectedOA, Math.max(0, targetSum - saToRA));
+  const raAt55 = saToRA + oaToRA;
+
+  // Grow RA from 55 to 65 at RA interest rate (4%)
+  const yearsFrom55To65 = CPF_LIFE_PAYOUT_START_AGE - CPF_RA_CREATION_AGE;
+  return raAt55 * Math.pow(1 + CPF_RA_INTEREST_RATE, yearsFrom55To65);
+}
+
+/**
+ * Estimate CPF Life monthly payout based on RA balance and chosen plan.
+ *
+ * @param saBalance - Current SA balance
+ * @param oaBalance - Current OA balance
+ * @param currentAge - Current age
+ * @param plan - CPF LIFE plan type (STANDARD, BASIC, ESCALATING)
+ * @param retirementSumTier - BRS, FRS, or ERS
+ * @param payoutYear - How many years since payout started (for ESCALATING plan)
+ * @returns Estimated monthly payout
  */
 export function estimateCpfLifeMonthlyPayout(
   saBalance: number,
   oaBalance: number,
-  currentAge: number
+  currentAge: number,
+  plan: CpfLifePlanType = "STANDARD",
+  retirementSumTier: CpfRetirementSumTier = "FRS",
+  payoutYear: number = 0
 ): number {
-  if (currentAge < CPF_LIFE_PAYOUT_START_AGE) {
-    // Project RA growth from now to 65
-    const yearsToPayoutStart = CPF_LIFE_PAYOUT_START_AGE - currentAge;
-    // Assume RA (from SA+OA transfer at 55) grows at SA rate
-    const estimatedRA = (saBalance + oaBalance * 0.5) * Math.pow(1 + CPF_SA_INTEREST_RATE, yearsToPayoutStart);
-    return (estimatedRA / 10000) * CPF_LIFE_PAYOUT_PER_10K;
+  const raBalance = estimateRaBalance(saBalance, oaBalance, currentAge, retirementSumTier);
+  const planConfig = CPF_LIFE_PLANS[plan];
+  const basePayout = raBalance * planConfig.payoutPerDollarRA;
+
+  // Apply escalation for the ESCALATING plan
+  if (plan === "ESCALATING" && payoutYear > 0) {
+    const escalation = CPF_LIFE_PLANS.ESCALATING.annualEscalation;
+    return basePayout * Math.pow(1 + escalation, payoutYear);
   }
-  // Already past 65, use current balances
-  const ra = saBalance + oaBalance * 0.3;
-  return (ra / 10000) * CPF_LIFE_PAYOUT_PER_10K;
+
+  return basePayout;
 }
 
 /**
@@ -162,7 +271,7 @@ export function calculateCpfRelief(monthlyGross: number, age: number): number {
   const bracket = getCpfRateBracket(age);
   const cappedMonthlySalary = Math.min(monthlyGross, CPF_MONTHLY_SALARY_CEILING);
   const annualEmployeeContrib = cappedMonthlySalary * 12 * bracket.employeeRate;
-  // CPF Relief is capped at the employee contribution (max ~$20,400 at 20% of $8k*12)
+  // CPF Relief is capped at the employee contribution (max ~$19,200 at 20% of $8k×12)
   return annualEmployeeContrib;
 }
 

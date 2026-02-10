@@ -10,6 +10,7 @@ import CpfChart from "@/components/dashboard/CpfChart";
 import NetWorthWaterfall from "@/components/dashboard/NetWorthWaterfall";
 import KpiCards from "@/components/dashboard/KpiCards";
 import DataTable from "@/components/dashboard/DataTable";
+import AssumptionsPanel from "@/components/dashboard/AssumptionsPanel";
 import PdfExport from "@/components/dashboard/PdfExport";
 import { AssetManager, LiabilityManager } from "@/components/dashboard/AssetLiabilityManager";
 import { Card, CardContent } from "@/components/ui/card";
@@ -119,6 +120,9 @@ export default function DashboardPage() {
               <TabsTrigger value="data" className="text-xs">
                 Data Table
               </TabsTrigger>
+              <TabsTrigger value="assumptions" className="text-xs">
+                Assumptions
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="wealth">
@@ -167,6 +171,10 @@ export default function DashboardPage() {
                   <DataTable />
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="assumptions">
+              <AssumptionsPanel />
             </TabsContent>
           </Tabs>
 
