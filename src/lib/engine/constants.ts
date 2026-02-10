@@ -155,18 +155,18 @@ export const CPF_LIFE_PLANS = {
   STANDARD: {
     label: "Standard Plan",
     description: "Provides higher payouts that stay level for life. Leaving less for beneficiaries.",
-    payoutPerDollarRA: 0.0000556,  // ~$556/month per $100k RA at 65
+    payoutPerDollarRA: 0.00556,  // ~$556/month per $100k RA at 65 (5.56% annual payout rate)
   },
   BASIC: {
     label: "Basic Plan",
     description: "Provides lower payouts for life but leaves more for beneficiaries.",
-    payoutPerDollarRA: 0.0000500,  // ~$500/month per $100k RA at 65
+    payoutPerDollarRA: 0.00500,  // ~$500/month per $100k RA at 65 (5.00% annual payout rate)
   },
   ESCALATING: {
     label: "Escalating Plan",
     description: "Starts with lower payouts that increase by 2% per year to keep pace with inflation.",
-    payoutPerDollarRA: 0.0000417,  // ~$417/month per $100k RA at 65 (initial)
-    annualEscalation: 0.02,       // 2% annual increase
+    payoutPerDollarRA: 0.00417,  // ~$417/month per $100k RA at 65 (initial, 4.17% annual payout rate)
+    annualEscalation: 0.02,      // 2% annual increase
   },
 } as const;
 
@@ -234,27 +234,87 @@ export const FAMILY_LIABILITY_YEARS = 20;              // years of income for de
 
 // ─── LIA Insurance Benchmarks ────────────────────────────────────────────────
 // Source: Life Insurance Association of Singapore — Recommended coverage guidelines
+// Updated per 2026 guidelines
 export const LIA_BENCHMARKS = {
   DEATH: {
     label: "Death / Terminal Illness",
-    multiplierOfIncome: 10,    // 10× annual income
-    minYearsExpenses: 5,       // or 5 years of expenses, whichever is higher
+    multiplierOfIncome: 10,    // 10× annual income or 5 years expenses, whichever higher
+    minYearsExpenses: 5,
   },
   TPD: {
     label: "Total Permanent Disability",
-    multiplierOfIncome: 10,
+    multiplierOfIncome: 10,    // 10× annual income or 5 years expenses, whichever higher
     minYearsExpenses: 5,
   },
   CRITICAL_ILLNESS_EARLY: {
-    label: "Critical Illness (Early Stage)",
-    multiplierOfIncome: 3,
+    label: "Critical Illness (Early Stage / ECI)",
+    multiplierOfIncome: 3,     // 3× annual income
   },
   CRITICAL_ILLNESS_LATE: {
-    label: "Critical Illness (Late Stage)",
-    multiplierOfIncome: 5,
+    label: "Critical Illness (Late Stage / CI)",
+    multiplierOfIncome: 5,     // 5× annual income
   },
   DISABILITY_INCOME: {
     label: "Disability Income",
     monthlyPercentOfIncome: 0.75,  // 75% of monthly income
   },
 } as const;
+
+// ─── CPF Retirement Sum Historical & Projected Data ────────────────────────
+// Based on CPF Board adjustments 2006–2026 (historical data)
+// Used for trend projection over next 100 years
+export const CPF_RETIREMENT_SUM_HISTORY = {
+  BRS: [
+    { year: 2006, amount: 39500 },
+    { year: 2010, amount: 48500 },
+    { year: 2015, amount: 75500 },
+    { year: 2020, amount: 92500 },
+    { year: 2024, amount: 102000 },
+    { year: 2026, amount: 106500 },
+  ],
+  FRS: [
+    { year: 2006, amount: 79000 },
+    { year: 2010, amount: 97000 },
+    { year: 2015, amount: 151000 },
+    { year: 2020, amount: 185000 },
+    { year: 2024, amount: 204000 },
+    { year: 2026, amount: 213000 },
+  ],
+  ERS: [
+    { year: 2006, amount: 0 }, // ERS introduced in 2025
+    { year: 2024, amount: 408000 },
+    { year: 2025, amount: 417000 },
+    { year: 2026, amount: 426000 },
+  ],
+} as const;
+
+/**
+ * Project CPF Retirement Sum using linear trend of past data.
+ * Calculates annual increase rate from oldest to newest historical data,
+ * then projects forward to specified year using straight-line extrapolation.
+ *
+ * @param tier - BRS, FRS, or ERS
+ * @param targetYear - Year to project to
+ * @returns Projected retirement sum amount
+ */
+export function projectCpfRetirementSum(
+  tier: CpfRetirementSumTier,
+  targetYear: number
+): number {
+  const history = CPF_RETIREMENT_SUM_HISTORY[tier];
+  if (history.length < 2) return CPF_RETIREMENT_SUMS[tier];
+
+  // Filter out zero entries (ERS before 2025)
+  const validEntries = history.filter((h) => h.amount > 0);
+  if (validEntries.length < 2) return CPF_RETIREMENT_SUMS[tier];
+
+  const oldest = validEntries[0];
+  const newest = validEntries[validEntries.length - 1];
+  const yearsDiff = newest.year - oldest.year;
+  const amountDiff = newest.amount - oldest.amount;
+  const annualIncrease = amountDiff / yearsDiff;
+
+  // Project to target year using straight-line increment
+  const yearsFromNewest = targetYear - newest.year;
+  return newest.amount + annualIncrease * yearsFromNewest;
+}

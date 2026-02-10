@@ -11,8 +11,8 @@ import {
   CPF_MONTHLY_SALARY_CEILING,
   CPF_RETIREMENT_SUMS,
   CPF_LIFE_PLANS,
-  CPF_LIFE_PAYOUT_START_AGE,
-  CPF_RA_CREATION_AGE,
+  projectCpfRetirementSum,
+  CPF_RETIREMENT_SUM_HISTORY,
   IRAS_TAX_BRACKETS,
   TOTAL_PERSONAL_RELIEFS_CAP,
   SRS_RELIEF_CAP,
@@ -137,33 +137,78 @@ function CpfInterestTable() {
 }
 
 function CpfRetirementSumsTable() {
+  const currentYear = new Date().getFullYear();
+  const projectionYears = [currentYear, currentYear + 10, currentYear + 25, currentYear + 50, currentYear + 100];
+
   return (
-    <div>
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-b border-border text-muted-foreground">
-            <th className="text-left py-2 pr-2 font-medium">Tier</th>
-            <th className="text-right py-2 font-medium">Amount (2026)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(Object.entries(CPF_RETIREMENT_SUMS) as [string, number][]).map(([tier, amount]) => (
-            <tr key={tier} className="border-b border-border/50">
-              <td className="py-1.5 pr-2">
-                <Badge variant="outline" className="text-[10px]">
-                  {tier}
-                </Badge>{" "}
-                <span className="text-muted-foreground">
-                  {tier === "BRS" ? "Basic" : tier === "FRS" ? "Full" : "Enhanced"}
-                </span>
-              </td>
-              <td className="py-1.5 text-right font-mono font-semibold">{currency(amount)}</td>
+    <div className="space-y-4">
+      {/* Current retirement sums (2026) */}
+      <div>
+        <h4 className="text-xs font-semibold mb-2">2026 Retirement Sum Targets</h4>
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-border text-muted-foreground">
+              <th className="text-left py-2 pr-2 font-medium">Tier</th>
+              <th className="text-right py-2 font-medium">Amount</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="mt-2 text-[11px] text-muted-foreground">
-        RA created at age {CPF_RA_CREATION_AGE}. CPF LIFE payouts start at age {CPF_LIFE_PAYOUT_START_AGE}.
+          </thead>
+          <tbody>
+            {(Object.entries(CPF_RETIREMENT_SUMS) as [string, number][]).map(([tier, amount]) => (
+              <tr key={tier} className="border-b border-border/50">
+                <td className="py-1.5 pr-2">
+                  <Badge variant="outline" className="text-[10px]">
+                    {tier}
+                  </Badge>{" "}
+                  <span className="text-muted-foreground">
+                    {tier === "BRS" ? "Basic" : tier === "FRS" ? "Full" : "Enhanced"}
+                  </span>
+                </td>
+                <td className="py-1.5 text-right font-mono font-semibold">{currency(amount)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Projection tables for each tier */}
+      {(["BRS", "FRS", "ERS"] as const).map((tier) => (
+        <div key={tier}>
+          <h4 className="text-xs font-semibold mb-2 text-muted-foreground">
+            {tier === "BRS" ? "BRS (Basic)" : tier === "FRS" ? "FRS (Full)" : "ERS (Enhanced)"} — Straight-line Projection
+          </h4>
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border text-muted-foreground">
+                <th className="text-left py-2 pr-2 font-medium">Year</th>
+                <th className="text-right py-2 font-medium">Projected Sum</th>
+                <th className="text-right py-2 pl-2 font-medium">Change from 2026</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projectionYears.map((year) => {
+                const projected = projectCpfRetirementSum(tier, year);
+                const current = CPF_RETIREMENT_SUMS[tier];
+                const change = projected - current;
+                const pctChange = current > 0 ? (change / current) * 100 : 0;
+                return (
+                  <tr key={year} className="border-b border-border/50 hover:bg-muted/30">
+                    <td className="py-1.5 pr-2 font-mono">{year}</td>
+                    <td className="py-1.5 text-right font-mono font-semibold">{currency(projected)}</td>
+                    <td className="py-1.5 pl-2 text-right font-mono text-muted-foreground">
+                      {change >= 0 ? "+" : ""}{currency(change)} ({pctChange > 0 ? "+" : ""}{pctChange.toFixed(1)}%)
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ))}
+
+      <p className="mt-3 text-[11px] text-muted-foreground">
+        <strong>Projection Method:</strong> Linear extrapolation based on historical CPF Board increases 2006–2026.
+        Rates: BRS ~{currency(Math.round((CPF_RETIREMENT_SUM_HISTORY.BRS[CPF_RETIREMENT_SUM_HISTORY.BRS.length - 1].amount - CPF_RETIREMENT_SUM_HISTORY.BRS[CPF_RETIREMENT_SUM_HISTORY.BRS.length - 2].amount) / (CPF_RETIREMENT_SUM_HISTORY.BRS[CPF_RETIREMENT_SUM_HISTORY.BRS.length - 1].year - CPF_RETIREMENT_SUM_HISTORY.BRS[CPF_RETIREMENT_SUM_HISTORY.BRS.length - 2].year)))}/year,
+        FRS ~{currency(Math.round((CPF_RETIREMENT_SUM_HISTORY.FRS[CPF_RETIREMENT_SUM_HISTORY.FRS.length - 1].amount - CPF_RETIREMENT_SUM_HISTORY.FRS[CPF_RETIREMENT_SUM_HISTORY.FRS.length - 2].amount) / (CPF_RETIREMENT_SUM_HISTORY.FRS[CPF_RETIREMENT_SUM_HISTORY.FRS.length - 1].year - CPF_RETIREMENT_SUM_HISTORY.FRS[CPF_RETIREMENT_SUM_HISTORY.FRS.length - 2].year)))}/year.
       </p>
     </div>
   );

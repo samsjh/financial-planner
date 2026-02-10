@@ -8,4 +8,7 @@ export {
   getCpfRateBracket,
 } from "./cpfLogic";
 export { calculateAnnualTax, getMarginalTaxRate } from "./taxLogic";
-export * from "./constants";
+export {
+  projectCpfRetirementSum,
+  CPF_RETIREMENT_SUM_HISTORY,
+} from "./constants";
