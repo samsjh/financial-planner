@@ -47,6 +47,23 @@ export interface ClientProfile {
   srsReliefYearsRemaining: number; // how many more years they'll contribute
   lifeInsuranceReliefYearsRemaining: number;
 
+  // Tax Reliefs — Family
+  numberOfChildren: number; // qualifying children for QCR
+  numberOfDisabledChildren: number; // disabled children (higher QCR)
+  numberOfParentsSameHousehold: number; // parents/grandparents living with taxpayer
+  numberOfParentsNotSameHousehold: number; // parents/grandparents NOT living with taxpayer
+  numberOfHandicappedParentsSameHousehold: number;
+  numberOfHandicappedParentsNotSameHousehold: number;
+
+  // Tax Reliefs — Working Mother's Child Relief
+  isWorkingMother: boolean; // eligible for WMCR
+
+  // Tax Reliefs — NSman
+  isActiveNsman: boolean; // active NSman status
+
+  // Tax Reliefs — CPF Top-up
+  annualCpfTopUp: number; // voluntary CPF top-up contributions (capped at $8k per recipient)
+
   // Expenses
   monthlyFixedExpenses: number; // mortgage, loans, insurance
   monthlyVariableExpenses: number; // lifestyle

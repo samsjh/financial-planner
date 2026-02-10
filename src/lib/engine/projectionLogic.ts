@@ -14,7 +14,7 @@ import type {
 } from "../types";
 
 import { projectCpfOneYear, estimateCpfLifeMonthlyPayout, calculatePropertySaleProceeds } from "./cpfLogic";
-import { calculateAnnualTax } from "./taxLogic";
+import { calculateAnnualTax, type TaxReliefInputs } from "./taxLogic";
 import {
   MORTALITY_AGE,
   CONSERVATIVE_MORTALITY_AGE,
@@ -268,7 +268,18 @@ export function runProjection(
       profile.lifeInsuranceRelief,
       isWorking,
       yearsWithSrs,
-      yearsWithLifeIns
+      yearsWithLifeIns,
+      {
+        numberOfChildren: profile.numberOfChildren,
+        numberOfDisabledChildren: profile.numberOfDisabledChildren,
+        numberOfParentsSameHousehold: profile.numberOfParentsSameHousehold,
+        numberOfParentsNotSameHousehold: profile.numberOfParentsNotSameHousehold,
+        numberOfHandicappedParentsSameHousehold: profile.numberOfHandicappedParentsSameHousehold,
+        numberOfHandicappedParentsNotSameHousehold: profile.numberOfHandicappedParentsNotSameHousehold,
+        isWorkingMother: profile.isWorkingMother,
+        isActiveNsman: profile.isActiveNsman,
+        annualCpfTopUp: profile.annualCpfTopUp,
+      } satisfies TaxReliefInputs
     );
 
     // ── Net Cashflow ───────────────────────────────────────────────────────
