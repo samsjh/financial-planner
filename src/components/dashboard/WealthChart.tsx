@@ -47,7 +47,7 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
-export default function WealthChart() {
+export default function WealthChart({ compact = false }: { compact?: boolean }) {
   const simulationResult = useDashboardStore((s) => s.simulationResult);
   const profile = useDashboardStore((s) => s.profile);
 
@@ -69,16 +69,18 @@ export default function WealthChart() {
 
   return (
     <div className="h-full w-full">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="text-sm font-semibold">Wealth Flight Path</h3>
-          <p className="text-xs text-muted-foreground">
-            Stacked asset projection
-            {profile.useInflationAdjusted ? " (Inflation-Adjusted PV)" : " (Nominal)"}
-          </p>
+      {!compact && (
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold">Wealth Flight Path</h3>
+            <p className="text-xs text-muted-foreground">
+              Stacked asset projection
+              {profile.useInflationAdjusted ? " (Inflation-Adjusted PV)" : " (Nominal)"}
+            </p>
+          </div>
         </div>
-      </div>
-      <ResponsiveContainer width="100%" height="90%">
+      )}
+      <ResponsiveContainer width="100%" height={compact ? "100%" : "90%"}>
         <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="gradLiquid" x1="0" y1="0" x2="0" y2="1">

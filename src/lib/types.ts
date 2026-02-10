@@ -212,6 +212,29 @@ export interface PropertySaleProceeds {
   netCashProceeds: number;
 }
 
+// ─── Insurance & Planning ────────────────────────────────────────────────────
+
+export interface InsurancePolicy {
+  id: string;
+  productName: string;
+  company: string;
+  policyType: "Life" | "Health" | "CI" | "DI" | "Other";
+  sumAssured: number;
+  monthlyPremium: number;
+  premiumTerm: number; // years remaining
+  coverageDuration: number; // total years of coverage
+  startAge: number; // age when policy started
+  notes?: string;
+}
+
+export type PlanPhase = "intake" | "milestones" | "insurance" | "stress-tests" | "gaps" | "recommendations";
+
+export interface PlanState {
+  currentPhase: PlanPhase;
+  completedPhases: PlanPhase[];
+  insurancePolicies: InsurancePolicy[];
+}
+
 // ─── Store State ─────────────────────────────────────────────────────────────
 
 export interface DashboardState {
@@ -220,6 +243,7 @@ export interface DashboardState {
   liabilities: Liability[];
   lifeEvents: LifeEvent[];
   simulationResult: SimulationResult | null;
+  planState: PlanState;
 
   // Actions
   setProfile: (profile: Partial<ClientProfile>) => void;
@@ -233,4 +257,10 @@ export interface DashboardState {
   addLifeEvent: (event: LifeEvent) => void;
   removeLifeEvent: (id: string) => void;
   runSimulation: () => void;
+
+  // Plan phase management
+  setCurrentPhase: (phase: PlanPhase) => void;
+  addInsurancePolicy: (policy: InsurancePolicy) => void;
+  removeInsurancePolicy: (id: string) => void;
+  setInsurancePolicies: (policies: InsurancePolicy[]) => void;
 }

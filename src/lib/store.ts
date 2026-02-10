@@ -92,6 +92,11 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   liabilities: [],
   lifeEvents: [],
   simulationResult: null,
+  planState: {
+    currentPhase: "intake",
+    completedPhases: [],
+    insurancePolicies: [],
+  },
 
   setProfile: (partial) =>
     set((state) => ({
@@ -145,5 +150,48 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     const { profile, assets, liabilities, lifeEvents } = get();
     const result = runProjection(profile, assets, liabilities, lifeEvents);
     set({ simulationResult: result });
+  },
+
+  // Plan phase management
+  setCurrentPhase: (phase) => {
+    set((state) => {
+      const completed = state.planState.completedPhases.includes(phase)
+        ? state.planState.completedPhases
+        : [...state.planState.completedPhases, phase];
+      return {
+        planState: {
+          ...state.planState,
+          currentPhase: phase,
+          completedPhases: completed,
+        },
+      };
+    });
+  },
+
+  addInsurancePolicy: (policy) => {
+    set((state) => ({
+      planState: {
+        ...state.planState,
+        insurancePolicies: [...state.planState.insurancePolicies, policy],
+      },
+    }));
+  },
+
+  removeInsurancePolicy: (id) => {
+    set((state) => ({
+      planState: {
+        ...state.planState,
+        insurancePolicies: state.planState.insurancePolicies.filter((p) => p.id !== id),
+      },
+    }));
+  },
+
+  setInsurancePolicies: (policies) => {
+    set((state) => ({
+      planState: {
+        ...state.planState,
+        insurancePolicies: policies,
+      },
+    }));
   },
 }));
