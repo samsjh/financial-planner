@@ -2,8 +2,9 @@
 
 import { useDashboardStore } from "@/lib/store";
 import {
-  AreaChart,
+  ComposedChart,
   Area,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -63,7 +64,6 @@ export default function WealthChart() {
     liquidAssets: Math.round(s.liquidAssets),
     cpfTotal: Math.round(s.cpfTotal),
     fixedAssets: Math.round(s.fixedAssets),
-    totalLiabilities: Math.round(-s.totalLiabilities),
     netWorth: Math.round(profile.useInflationAdjusted ? s.netWorthPV : s.netWorth),
   }));
 
@@ -79,7 +79,7 @@ export default function WealthChart() {
         </div>
       </div>
       <ResponsiveContainer width="100%" height="90%">
-        <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="gradLiquid" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0.4} />
@@ -159,17 +159,15 @@ export default function WealthChart() {
             strokeWidth={1.5}
             name="Liquid Assets"
           />
-          <Area
+          <Line
             type="monotone"
-            dataKey="totalLiabilities"
-            stackId="1"
-            stroke="hsl(0, 63%, 55%)"
-            fill="hsl(0, 63%, 55%)"
-            fillOpacity={0.15}
-            strokeWidth={1.5}
-            name="Liabilities"
+            dataKey="netWorth"
+            stroke="hsl(147, 60%, 50%)"
+            strokeWidth={2.5}
+            dot={false}
+            name="Net Worth"
           />
-        </AreaChart>
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );
