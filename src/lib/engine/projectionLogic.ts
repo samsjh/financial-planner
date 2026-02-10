@@ -46,6 +46,15 @@ function presentValue(futureValue: number, discountRate: number, years: number):
   return futureValue / Math.pow(1 + discountRate, years);
 }
 
+/**
+ * Classify asset into liquid or fixed for projection purposes.
+ * Liquid: cash, crypto (easily accessible)
+ * Fixed: stocks, bonds, real estate, commodities, other (medium-long term)
+ */
+function isLiquidAsset(category: string): boolean {
+  return category === "cash";
+}
+
 // ─── Main Simulation ─────────────────────────────────────────────────────────
 
 export function runProjection(
@@ -69,11 +78,11 @@ export function runProjection(
 
   // Sum liquid and fixed assets
   let liquidAssets = assets
-    .filter((a) => a.category === "liquid")
+    .filter((a) => isLiquidAsset(a.category))
     .reduce((sum, a) => sum + a.currentValue, 0);
 
   let fixedAssets = assets
-    .filter((a) => a.category === "fixed")
+    .filter((a) => !isLiquidAsset(a.category))
     .reduce((sum, a) => sum + a.currentValue, 0);
 
   // Add property to fixed assets
@@ -84,19 +93,19 @@ export function runProjection(
 
   // Weighted average appreciation rates
   const liquidAppreciation =
-    assets.filter((a) => a.category === "liquid").length > 0
+    assets.filter((a) => isLiquidAsset(a.category)).length > 0
       ? assets
-          .filter((a) => a.category === "liquid")
+          .filter((a) => isLiquidAsset(a.category))
           .reduce((sum, a) => sum + a.projectedAppreciationRate * a.currentValue, 0) /
-        Math.max(1, assets.filter((a) => a.category === "liquid").reduce((sum, a) => sum + a.currentValue, 0))
+        Math.max(1, assets.filter((a) => isLiquidAsset(a.category)).reduce((sum, a) => sum + a.currentValue, 0))
       : profile.riskAppetiteGrowthRate;
 
   const fixedAppreciation =
-    assets.filter((a) => a.category === "fixed").length > 0
+    assets.filter((a) => !isLiquidAsset(a.category)).length > 0
       ? assets
-          .filter((a) => a.category === "fixed")
+          .filter((a) => !isLiquidAsset(a.category))
           .reduce((sum, a) => sum + a.projectedAppreciationRate * a.currentValue, 0) /
-        Math.max(1, assets.filter((a) => a.category === "fixed").reduce((sum, a) => sum + a.currentValue, 0))
+        Math.max(1, assets.filter((a) => !isLiquidAsset(a.category)).reduce((sum, a) => sum + a.currentValue, 0))
       : profile.propertyAppreciationRate;
 
   // Liabilities

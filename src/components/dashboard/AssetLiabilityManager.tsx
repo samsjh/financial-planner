@@ -1,6 +1,7 @@
 "use client";
 
 import { useDashboardStore } from "@/lib/store";
+import { ASSET_CATEGORIES, LIABILITY_CATEGORIES } from "@/lib/engine";
 import {
   Dialog,
   DialogContent,
@@ -20,17 +21,27 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { Asset, Liability } from "@/lib/types";
+import type { Asset, Liability, AssetCategory, LiabilityCategory } from "@/lib/types";
 
 export function AssetManager() {
   const { assets, addAsset, removeAsset } = useDashboardStore();
   const [open, setOpen] = useState(false);
   const [newAsset, setNewAsset] = useState<Partial<Asset>>({
     name: "",
-    category: "liquid",
+    category: "cash",
     currentValue: 0,
-    projectedAppreciationRate: 0.05,
+    projectedAppreciationRate: ASSET_CATEGORIES.cash.defaultRate,
   });
+
+  const handleCategoryChange = (category: string) => {
+    const catKey = category as AssetCategory;
+    const defaultRate = ASSET_CATEGORIES[catKey]?.defaultRate ?? 0;
+    setNewAsset((p) => ({
+      ...p,
+      category: catKey,
+      projectedAppreciationRate: defaultRate,
+    }));
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -45,26 +56,30 @@ export function AssetManager() {
         </DialogHeader>
 
         <div className="space-y-3 max-h-60 overflow-y-auto">
-          {assets.map((a) => (
-            <div
-              key={a.id}
-              className="flex items-center gap-2 text-xs bg-background p-2 rounded border border-border"
-            >
-              <span className="flex-1 truncate">{a.name}</span>
-              <span className="font-mono text-muted-foreground">
-                ${a.currentValue.toLocaleString()}
-              </span>
-              <span className="text-[10px] text-muted-foreground">
-                {a.category}
-              </span>
-              <button
-                onClick={() => removeAsset(a.id)}
-                className="text-destructive"
+          {assets.map((a) => {
+            const catLabel = ASSET_CATEGORIES[a.category]?.label ?? a.category;
+            return (
+              <div
+                key={a.id}
+                className="flex items-center gap-2 text-xs bg-background p-2 rounded border border-border"
               >
-                <Trash2 className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
+                <div className="flex-1 min-w-0">
+                  <div className="truncate font-medium">{a.name}</div>
+                  <div className="text-[10px] text-muted-foreground">{catLabel}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-mono font-semibold">${a.currentValue.toLocaleString()}</div>
+                  <div className="text-[10px] text-muted-foreground">{(a.projectedAppreciationRate * 100).toFixed(1)}%</div>
+                </div>
+                <button
+                  onClick={() => removeAsset(a.id)}
+                  className="text-destructive hover:text-destructive/80"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         <div className="space-y-2 border-t border-border pt-3">
@@ -73,6 +88,7 @@ export function AssetManager() {
               <Label className="text-xs text-muted-foreground">Name</Label>
               <Input
                 className="h-8 text-xs bg-background"
+                placeholder="e.g., GIC in POSB"
                 value={newAsset.name}
                 onChange={(e) =>
                   setNewAsset((p) => ({ ...p, name: e.target.value }))
@@ -83,19 +99,17 @@ export function AssetManager() {
               <Label className="text-xs text-muted-foreground">Category</Label>
               <Select
                 value={newAsset.category}
-                onValueChange={(v) =>
-                  setNewAsset((p) => ({
-                    ...p,
-                    category: v as "fixed" | "liquid",
-                  }))
-                }
+                onValueChange={handleCategoryChange}
               >
                 <SelectTrigger className="h-8 text-xs bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="liquid">Liquid</SelectItem>
-                  <SelectItem value="fixed">Fixed</SelectItem>
+                  {Object.entries(ASSET_CATEGORIES).map(([key, val]) => (
+                    <SelectItem key={key} value={key}>
+                      {val.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -110,24 +124,25 @@ export function AssetManager() {
                 onChange={(e) =>
                   setNewAsset((p) => ({
                     ...p,
-                    currentValue: parseFloat(e.target.value),
+                    currentValue: parseFloat(e.target.value) || 0,
                   }))
                 }
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">
+              <Label className="text-xs text-muted-foreground flex items-center gap-1">
                 Growth Rate
+                <span className="text-[9px] text-muted-foreground">(suggested)</span>
               </Label>
               <Input
                 type="number"
-                step="0.01"
+                step="0.001"
                 className="h-8 text-xs bg-background"
                 value={newAsset.projectedAppreciationRate}
                 onChange={(e) =>
                   setNewAsset((p) => ({
                     ...p,
-                    projectedAppreciationRate: parseFloat(e.target.value),
+                    projectedAppreciationRate: parseFloat(e.target.value) || 0,
                   }))
                 }
               />
@@ -138,20 +153,20 @@ export function AssetManager() {
             size="sm"
             className="w-full text-xs"
             onClick={() => {
-              if (newAsset.name) {
+              if (newAsset.name && newAsset.category) {
                 addAsset({
                   id: crypto.randomUUID(),
                   name: newAsset.name!,
-                  category: newAsset.category as "liquid" | "fixed",
+                  category: newAsset.category as AssetCategory,
                   currentValue: newAsset.currentValue || 0,
                   projectedAppreciationRate:
-                    newAsset.projectedAppreciationRate || 0.05,
+                    newAsset.projectedAppreciationRate ?? 0.05,
                 });
                 setNewAsset({
                   name: "",
-                  category: "liquid",
+                  category: "cash",
                   currentValue: 0,
-                  projectedAppreciationRate: 0.05,
+                  projectedAppreciationRate: ASSET_CATEGORIES.cash.defaultRate,
                 });
               }
             }}
@@ -163,18 +178,27 @@ export function AssetManager() {
     </Dialog>
   );
 }
-
 export function LiabilityManager() {
   const { liabilities, addLiability, removeLiability } = useDashboardStore();
   const [open, setOpen] = useState(false);
   const [newLiab, setNewLiab] = useState<Partial<Liability>>({
     name: "",
-    category: "longTerm",
+    category: "mortgage",
     currentBalance: 0,
-    interestRate: 0.035,
+    interestRate: LIABILITY_CATEGORIES.mortgage.defaultRate,
     monthlyPayment: 0,
     yearsRemaining: 10,
   });
+
+  const handleCategoryChange = (category: string) => {
+    const catKey = category as LiabilityCategory;
+    const defaultRate = LIABILITY_CATEGORIES[catKey]?.defaultRate ?? 0.05;
+    setNewLiab((p) => ({
+      ...p,
+      category: catKey,
+      interestRate: defaultRate,
+    }));
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -189,23 +213,30 @@ export function LiabilityManager() {
         </DialogHeader>
 
         <div className="space-y-3 max-h-60 overflow-y-auto">
-          {liabilities.map((l) => (
-            <div
-              key={l.id}
-              className="flex items-center gap-2 text-xs bg-background p-2 rounded border border-border"
-            >
-              <span className="flex-1 truncate">{l.name}</span>
-              <span className="font-mono text-red-400">
-                ${l.currentBalance.toLocaleString()}
-              </span>
-              <button
-                onClick={() => removeLiability(l.id)}
-                className="text-destructive"
+          {liabilities.map((l) => {
+            const catLabel = LIABILITY_CATEGORIES[l.category]?.label ?? l.category;
+            return (
+              <div
+                key={l.id}
+                className="flex items-center gap-2 text-xs bg-background p-2 rounded border border-border"
               >
-                <Trash2 className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
+                <div className="flex-1 min-w-0">
+                  <div className="truncate font-medium">{l.name}</div>
+                  <div className="text-[10px] text-muted-foreground">{catLabel}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-mono font-semibold text-red-400">${l.currentBalance.toLocaleString()}</div>
+                  <div className="text-[10px] text-muted-foreground">{(l.interestRate * 100).toFixed(2)}%</div>
+                </div>
+                <button
+                  onClick={() => removeLiability(l.id)}
+                  className="text-destructive hover:text-destructive/80"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         <div className="space-y-2 border-t border-border pt-3">
@@ -214,6 +245,7 @@ export function LiabilityManager() {
               <Label className="text-xs text-muted-foreground">Name</Label>
               <Input
                 className="h-8 text-xs bg-background"
+                placeholder="e.g., HDB Mortgage"
                 value={newLiab.name}
                 onChange={(e) =>
                   setNewLiab((p) => ({ ...p, name: e.target.value }))
@@ -224,19 +256,17 @@ export function LiabilityManager() {
               <Label className="text-xs text-muted-foreground">Category</Label>
               <Select
                 value={newLiab.category}
-                onValueChange={(v) =>
-                  setNewLiab((p) => ({
-                    ...p,
-                    category: v as "longTerm" | "shortTerm",
-                  }))
-                }
+                onValueChange={handleCategoryChange}
               >
                 <SelectTrigger className="h-8 text-xs bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="longTerm">Long Term</SelectItem>
-                  <SelectItem value="shortTerm">Short Term</SelectItem>
+                  {Object.entries(LIABILITY_CATEGORIES).map(([key, val]) => (
+                    <SelectItem key={key} value={key}>
+                      {val.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -253,13 +283,16 @@ export function LiabilityManager() {
                 onChange={(e) =>
                   setNewLiab((p) => ({
                     ...p,
-                    currentBalance: parseFloat(e.target.value),
+                    currentBalance: parseFloat(e.target.value) || 0,
                   }))
                 }
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Rate</Label>
+              <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                Rate
+                <span className="text-[9px] text-muted-foreground">(suggested)</span>
+              </Label>
               <Input
                 type="number"
                 step="0.001"
@@ -268,7 +301,7 @@ export function LiabilityManager() {
                 onChange={(e) =>
                   setNewLiab((p) => ({
                     ...p,
-                    interestRate: parseFloat(e.target.value),
+                    interestRate: parseFloat(e.target.value) || 0,
                   }))
                 }
               />
@@ -284,32 +317,46 @@ export function LiabilityManager() {
                 onChange={(e) =>
                   setNewLiab((p) => ({
                     ...p,
-                    monthlyPayment: parseFloat(e.target.value),
+                    monthlyPayment: parseFloat(e.target.value) || 0,
                   }))
                 }
               />
             </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Years Remaining</Label>
+            <Input
+              type="number"
+              className="h-8 text-xs bg-background"
+              value={newLiab.yearsRemaining}
+              onChange={(e) =>
+                setNewLiab((p) => ({
+                  ...p,
+                  yearsRemaining: parseFloat(e.target.value) || 10,
+                }))
+              }
+            />
           </div>
           <Button
             variant="outline"
             size="sm"
             className="w-full text-xs"
             onClick={() => {
-              if (newLiab.name) {
+              if (newLiab.name && newLiab.category) {
                 addLiability({
                   id: crypto.randomUUID(),
                   name: newLiab.name!,
-                  category: newLiab.category as "longTerm" | "shortTerm",
+                  category: newLiab.category as LiabilityCategory,
                   currentBalance: newLiab.currentBalance || 0,
-                  interestRate: newLiab.interestRate || 0.035,
+                  interestRate: newLiab.interestRate ?? LIABILITY_CATEGORIES.other.defaultRate,
                   monthlyPayment: newLiab.monthlyPayment || 0,
                   yearsRemaining: newLiab.yearsRemaining || 10,
                 });
                 setNewLiab({
                   name: "",
-                  category: "longTerm",
+                  category: "mortgage",
                   currentBalance: 0,
-                  interestRate: 0.035,
+                  interestRate: LIABILITY_CATEGORIES.mortgage.defaultRate,
                   monthlyPayment: 0,
                   yearsRemaining: 10,
                 });

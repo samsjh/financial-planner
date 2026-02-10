@@ -77,14 +77,14 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     {
       id: "1",
       name: "Emergency Fund",
-      category: "liquid",
+      category: "cash",
       currentValue: 20000,
-      projectedAppreciationRate: 0.02,
+      projectedAppreciationRate: 0.0025,
     },
     {
       id: "2",
       name: "Stock Portfolio",
-      category: "liquid",
+      category: "stocks",
       currentValue: 50000,
       projectedAppreciationRate: 0.07,
     },
