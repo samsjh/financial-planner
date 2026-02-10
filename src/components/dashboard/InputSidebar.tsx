@@ -359,22 +359,10 @@ export default function InputSidebar() {
                   register={register("annualSrsContribution")}
                 />
                 <InputField
-                  label="SRS Relief Years Remaining"
-                  id="srsReliefYearsRemaining"
-                  register={register("srsReliefYearsRemaining")}
-                  suffix="yrs"
-                />
-                <InputField
                   label="Life Insurance Premium /yr"
                   id="lifeInsuranceRelief"
                   prefix="$"
                   register={register("lifeInsuranceRelief")}
-                />
-                <InputField
-                  label="Life Ins Relief Years Remaining"
-                  id="lifeInsuranceReliefYearsRemaining"
-                  register={register("lifeInsuranceReliefYearsRemaining")}
-                  suffix="yrs"
                 />
 
                 <Separator className="my-2" />

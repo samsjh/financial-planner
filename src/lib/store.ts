@@ -31,8 +31,6 @@ const defaultProfile: ClientProfile = {
 
   annualSrsContribution: 0,
   lifeInsuranceRelief: 0,
-  srsReliefYearsRemaining: 0,
-  lifeInsuranceReliefYearsRemaining: 0,
 
   // Tax Reliefs — Family
   numberOfChildren: 0,

@@ -251,14 +251,10 @@ export function runProjection(
 
     // ── Tax ────────────────────────────────────────────────────────────────
 
-    const yearsWithSrs =
-      profile.srsReliefYearsRemaining > 0
-        ? y < profile.srsReliefYearsRemaining
-        : false;
-    const yearsWithLifeIns =
-      profile.lifeInsuranceReliefYearsRemaining > 0
-        ? y < profile.lifeInsuranceReliefYearsRemaining
-        : false;
+    // Claim SRS relief if annual contribution > 0
+    const hasSrsContribution = profile.annualSrsContribution > 0;
+    // Claim life insurance relief if annual premium > 0
+    const hasLifeInsurancePremium = profile.lifeInsuranceRelief > 0;
 
     const taxBreakdown = calculateAnnualTax(
       grossAnnualTotalIncome,
@@ -267,8 +263,8 @@ export function runProjection(
       profile.annualSrsContribution,
       profile.lifeInsuranceRelief,
       isWorking,
-      yearsWithSrs,
-      yearsWithLifeIns,
+      hasSrsContribution,
+      hasLifeInsurancePremium,
       {
         numberOfChildren: profile.numberOfChildren,
         numberOfDisabledChildren: profile.numberOfDisabledChildren,

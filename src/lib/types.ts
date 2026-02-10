@@ -44,8 +44,6 @@ export interface ClientProfile {
   // SRS & Reliefs
   annualSrsContribution: number;
   lifeInsuranceRelief: number; // annual life insurance premiums
-  srsReliefYearsRemaining: number; // how many more years they'll contribute
-  lifeInsuranceReliefYearsRemaining: number;
 
   // Tax Reliefs — Family
   numberOfChildren: number; // qualifying children for QCR

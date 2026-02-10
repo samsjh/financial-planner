@@ -26,8 +26,6 @@ export const profileSchema = z.object({
 
   annualSrsContribution: z.coerce.number().min(0),
   lifeInsuranceRelief: z.coerce.number().min(0),
-  srsReliefYearsRemaining: z.coerce.number().min(0),
-  lifeInsuranceReliefYearsRemaining: z.coerce.number().min(0),
 
   // Tax Reliefs — Family
   numberOfChildren: z.coerce.number().min(0).max(20),
