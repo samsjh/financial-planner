@@ -61,7 +61,7 @@ export default function WealthChart() {
 
   const data = simulationResult.snapshots.map((s) => ({
     age: s.age,
-    liquidAssets: Math.round(s.liquidAssets),
+    liquidAssets: Math.max(0, Math.round(s.liquidAssets)), // Clamp to 0 for display; actual can be negative
     cpfTotal: Math.round(s.cpfTotal),
     fixedAssets: Math.round(s.fixedAssets),
     netWorth: Math.round(profile.useInflationAdjusted ? s.netWorthPV : s.netWorth),
